@@ -80,6 +80,9 @@ editButton.addEventListener("click", function () {
 closeButtom.addEventListener("click", function () {
     closeModal(editForm);
 });
+
+
+
 //open img
 const imgPopup = document.querySelector("#image-popup");
 const popupImg = imgPopup.querySelector(".popup__image");
@@ -87,7 +90,6 @@ const captionPopup = imgPopup.querySelector(".popup__caption");
 
 
 // close img
-
 
 const closePopup = imgPopup.querySelector(".popup__close");
 
@@ -140,3 +142,62 @@ function handleCardFormSubmit(evt) {
 }
 
 cardForm.addEventListener("submit", handleCardFormSubmit);
+//sprint 7
+function showInputError(inputElement, errorMessage) {
+    const errorElement = document.getElementById(`${inputElement.name}-error`);
+    errorElement.textContent = errorMessage;
+}
+
+function hideInputError(inputElement) {
+    const errorElement = document.getElementById(`${inputElement.name}-error`);
+    errorElement.textContent = "";
+}
+
+function checkInputValidity(inputElement) {
+    if (!inputElement.validity.valid) {
+        showInputError(inputElement, inputElement.validationMessage);
+    } else {
+        hideInputError(inputElement);
+    }
+}
+
+function hasInvalidInput(inputs) {
+    return Array.from(inputs).some(input => !input.validity.valid);
+};
+
+function toggleButtonState(input, button) {
+    if (hasInvalidInput(input)) { button.disabled = true; }
+    else { button.disabled = false; }
+};
+
+function setEventListeners(formElement) {
+    const inputList = Array.from(formElement.querySelectorAll(".popup__input"));
+    const buttonElement = formElement.querySelector(".popup__button");
+
+    toggleButtonState(inputList, buttonElement); // estado inicial al abrir el popup
+
+    inputList.forEach((inputElement) => {
+        inputElement.addEventListener("input", () => {
+            checkInputValidity(inputElement);
+            toggleButtonState(inputList, buttonElement);
+        });
+    });
+}
+
+const editProfileForm = document.querySelector("#edit-profile-form");
+const newCardForm = document.querySelector("#new-card-form");
+const editPlaceForm = document.querySelector("#new-card-form");
+
+
+setEventListeners(editProfileForm);
+setEventListeners(newCardForm);
+setEventListeners(editPlaceForm);
+
+function closeByOverlay(evt) {
+    if (evt.target === evt.currentTarget) {
+        closeModal(evt.target);
+    }
+}
+editForm.addEventListener("click", closeByOverlay);
+cardForm.addEventListener("click", closeByOverlay);
+imgPopup.addEventListener("click", closeByOverlay);

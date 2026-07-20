@@ -26,6 +26,11 @@
   margin-top: 48px;
 }
 
+.popup__button:disabled {
+  opacity: 0.2;
+  box-shadow: 0px 0px 25px 0px rgba(0, 0, 0, 0.15);
+}
+
 .popup__button:hover {
   background: rgba(0, 0, 0, 0.8);
   cursor: pointer;
@@ -116,6 +121,12 @@
   top: calc(100% + 10px);
   margin: 0;
 }
+
+.popup__error {
+  color: red;
+  font-size: 12px;
+}
+
 
 @media screen and (max-width: 544px) {
   .popup {
