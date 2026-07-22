@@ -1,3 +1,6 @@
+
+import { showInputError, hideInputError, checkInputValidity, hasInvalidInput, toggleButtonState, setEventListeners, resetValidation } from "./validate.js";
+
 const initialCards = [
     {
         name: "Valle de Yosemite",
@@ -53,32 +56,36 @@ addCard.addEventListener("click", function () {
 });
 closeAddCard.addEventListener("click", function () {
     closeModal(cardForm);
+    resetValidation(newCardForm);
 });
 const cardTemplate = document
     .querySelector("#card-template")
     .content.querySelector(".card");
 
 const cardList = document.querySelector(".cards__list");
+
 editForm.addEventListener("submit", (evt) => {
     evt.preventDefault();
     profile.textContent = nameForm.value;
     descriptionProfile.textContent = descriptionForm.value;
-    editForm.classList.remove("popup_is-opened");
-    editForm.reset();
+    closeModal(editForm);
 });
+
 function openModal(modal) {
     modal.classList.add("popup_is-opened");
 }
 
-function closeModal(modal) {
+function closeModal(modal, formElement) {
     modal.classList.remove("popup_is-opened");
+    resetValidation(formElement);
 }
 
 editButton.addEventListener("click", function () {
     openModal(editForm);
 });
 closeButtom.addEventListener("click", function () {
-    closeModal(editForm);
+    closeModal(editForm, editProfileForm);
+    resetValidation(editProfileForm);
 });
 
 
@@ -142,62 +149,28 @@ function handleCardFormSubmit(evt) {
 }
 
 cardForm.addEventListener("submit", handleCardFormSubmit);
-//sprint 7
-function showInputError(inputElement, errorMessage) {
-    const errorElement = document.getElementById(`${inputElement.name}-error`);
-    errorElement.textContent = errorMessage;
-}
-
-function hideInputError(inputElement) {
-    const errorElement = document.getElementById(`${inputElement.name}-error`);
-    errorElement.textContent = "";
-}
-
-function checkInputValidity(inputElement) {
-    if (!inputElement.validity.valid) {
-        showInputError(inputElement, inputElement.validationMessage);
-    } else {
-        hideInputError(inputElement);
-    }
-}
-
-function hasInvalidInput(inputs) {
-    return Array.from(inputs).some(input => !input.validity.valid);
-};
-
-function toggleButtonState(input, button) {
-    if (hasInvalidInput(input)) { button.disabled = true; }
-    else { button.disabled = false; }
-};
-
-function setEventListeners(formElement) {
-    const inputList = Array.from(formElement.querySelectorAll(".popup__input"));
-    const buttonElement = formElement.querySelector(".popup__button");
-
-    toggleButtonState(inputList, buttonElement); // estado inicial al abrir el popup
-
-    inputList.forEach((inputElement) => {
-        inputElement.addEventListener("input", () => {
-            checkInputValidity(inputElement);
-            toggleButtonState(inputList, buttonElement);
-        });
-    });
-}
 
 const editProfileForm = document.querySelector("#edit-profile-form");
 const newCardForm = document.querySelector("#new-card-form");
-const editPlaceForm = document.querySelector("#new-card-form");
-
 
 setEventListeners(editProfileForm);
 setEventListeners(newCardForm);
-setEventListeners(editPlaceForm);
 
 function closeByOverlay(evt) {
     if (evt.target === evt.currentTarget) {
         closeModal(evt.target);
     }
 }
+function closeByEscape(evt) {
+    if (evt.key === "Escape") {
+        const openedPopup = document.querySelector(".popup_is-opened");
+        if (openedPopup) {
+            closeModal(openedPopup);
+        }
+    }
+}
+
+document.addEventListener("keydown", closeByEscape);
 editForm.addEventListener("click", closeByOverlay);
 cardForm.addEventListener("click", closeByOverlay);
 imgPopup.addEventListener("click", closeByOverlay);
