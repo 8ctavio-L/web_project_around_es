@@ -11,13 +11,13 @@ export class Popup {
     }
     close() {
         this.popupElement.classList.remove("popup_is-opened");
-        document.addEventListener("keydown", this.handleEscClose);
+        document.removeEventListener("keydown", this.handleEscClose);
     }
-    handleEscClose(evt) {
+    handleEscClose = (evt) => {
         if (evt.key === "Escape") {
             this.close();
         }
-    }
+    };
     setEventListeners() {
         const closeButton = this.popupElement.querySelector(".popup__close");
         closeButton.addEventListener("click", () => {

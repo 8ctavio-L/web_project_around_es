@@ -15,14 +15,14 @@ export class Popup {
 
     public close(): void {
         this.popupElement.classList.remove("popup_is-opened");
-        document.addEventListener("keydown", this.handleEscClose)
+        document.removeEventListener("keydown", this.handleEscClose)
     }
 
-    private handleEscClose(evt: KeyboardEvent): void {
+    private handleEscClose = (evt: KeyboardEvent): void => {
         if (evt.key === "Escape") {
             this.close();
         }
-    }
+    };
 
     public setEventListeners(): void {
         const closeButton = this.popupElement.querySelector(".popup__close") as HTMLElement
