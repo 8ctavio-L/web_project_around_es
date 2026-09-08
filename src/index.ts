@@ -93,3 +93,17 @@ profileAddButton.addEventListener("click", () => {
     newCardValidator.resetValidation();
     newCardPopup.open();
 });
+
+//sprint9
+
+async function testConnection(): Promise<void> {
+    const res = await fetch("https://around-api.es.tripleten-services.com/v1/users/me", {
+        headers: {
+            authorization: "a5c7133e-816a-485e-a557-edd1890928bb",
+        },
+    });
+    const data = await res.json();
+    console.log(data);
+}
+
+testConnection();
