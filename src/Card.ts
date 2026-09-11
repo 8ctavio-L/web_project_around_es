@@ -1,5 +1,7 @@
+import { CardData } from "./Api.js";
 
-export interface CardData {
+
+export interface CardFormData {
     name: string;
     link: string;
 }
@@ -8,17 +10,26 @@ export class Card {
     private data: CardData;
     private cardSelector: string;
     private handleCardClick: () => void;
+    private handleLikeClick: (cardId: string, isLiked: boolean, card: Card) => void;
+    private handleDeleteClick: (cardId: string, card: Card) => void;
     private element!: HTMLElement;
+    private likeButton!: HTMLButtonElement;
+    private cardDelete!: HTMLElement;
 
 
     constructor(
         data: CardData,
         cardSelector: string,
         handleCardClick: () => void,
+        handleLikeClick: (cardId: string, isLiked: boolean, card: Card) => void,
+        handleDeleteClick: (cardId: string, card: Card) => void,
     ) {
         this.data = data;
         this.cardSelector = cardSelector
         this.handleCardClick = handleCardClick
+        this.handleLikeClick = handleLikeClick
+        this.handleDeleteClick = handleDeleteClick;
+
     }
 
     private getTemplate(): HTMLElement {
@@ -40,20 +51,33 @@ export class Card {
 
     }
 
+    public updateLikeButton(isLiked: boolean): void {
+        this.data.isLiked = isLiked;
+        if (isLiked) {
+            this.likeButton.classList.add("card__like-button_is-active");
+        } else {
+            this.likeButton.classList.remove("card__like-button_is-active");
+        }
+    }
+
+    public removeCard(): void {
+        this.element.remove();
+    }
+
     private setEventListeners(): void {
-        const cardLikeButton = this.element.querySelector(".card__like-button") as HTMLButtonElement;
-        const cardDelete = this.element.querySelector(".card__delete-button") as HTMLElement;
+        this.likeButton = this.element.querySelector(".card__like-button") as HTMLButtonElement;
+        this.cardDelete = this.element.querySelector(".card__delete-button") as HTMLElement;
         const cardImage = this.element.querySelector(".card__image") as HTMLImageElement;
-        cardLikeButton.addEventListener("click", () => {
-            cardLikeButton.classList.toggle("card__like-button_is-active");
-        })
-        cardDelete.addEventListener("click", () => {
-            this.element.remove();
-        })
+
+        this.likeButton.addEventListener("click", () => {
+            this.handleLikeClick(this.data._id, this.data.isLiked, this);
+        });
+        this.cardDelete.addEventListener("click", () => {
+            this.handleDeleteClick(this.data._id, this)
+        });
         cardImage.addEventListener("click", () => {
             this.handleCardClick();
-        })
-
+        });
     }
 
 }

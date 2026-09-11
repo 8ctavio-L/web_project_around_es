@@ -2,11 +2,17 @@ export class Card {
     data;
     cardSelector;
     handleCardClick;
+    handleLikeClick;
+    handleDeleteClick;
     element;
-    constructor(data, cardSelector, handleCardClick) {
+    likeButton;
+    cardDelete;
+    constructor(data, cardSelector, handleCardClick, handleLikeClick, handleDeleteClick) {
         this.data = data;
         this.cardSelector = cardSelector;
         this.handleCardClick = handleCardClick;
+        this.handleLikeClick = handleLikeClick;
+        this.handleDeleteClick = handleDeleteClick;
     }
     getTemplate() {
         const cardTemplate = document.querySelector(this.cardSelector);
@@ -24,15 +30,27 @@ export class Card {
         this.setEventListeners();
         return this.element;
     }
+    updateLikeButton(isLiked) {
+        this.data.isLiked = isLiked;
+        if (isLiked) {
+            this.likeButton.classList.add("card__like-button_is-active");
+        }
+        else {
+            this.likeButton.classList.remove("card__like-button_is-active");
+        }
+    }
+    removeCard() {
+        this.element.remove();
+    }
     setEventListeners() {
-        const cardLikeButton = this.element.querySelector(".card__like-button");
-        const cardDelete = this.element.querySelector(".card__delete-button");
+        this.likeButton = this.element.querySelector(".card__like-button");
+        this.cardDelete = this.element.querySelector(".card__delete-button");
         const cardImage = this.element.querySelector(".card__image");
-        cardLikeButton.addEventListener("click", () => {
-            cardLikeButton.classList.toggle("card__like-button_is-active");
+        this.likeButton.addEventListener("click", () => {
+            this.handleLikeClick(this.data._id, this.data.isLiked, this);
         });
-        cardDelete.addEventListener("click", () => {
-            this.element.remove();
+        this.cardDelete.addEventListener("click", () => {
+            this.handleDeleteClick(this.data._id, this);
         });
         cardImage.addEventListener("click", () => {
             this.handleCardClick();

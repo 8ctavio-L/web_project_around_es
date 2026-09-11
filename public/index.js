@@ -5,51 +5,81 @@ import { defaultFormConfig } from "./utils/constants.js";
 import { PopupWithImage } from "./PopupWithImage.js";
 import { PopupWithForm } from "./PopupWithForm.js";
 import { UserInfo } from "./UserInfo.js";
-// --- cards ---
-const initialCards = [
-    { name: "Valle de Yosemite", link: "https://practicum-content.s3.us-west-1.amazonaws.com/web-code/moved_yosemite.jpg" },
-    { name: "Lago Louise", link: "https://practicum-content.s3.us-west-1.amazonaws.com/web-code/moved_lake-louise.jpg" },
-    { name: "Montañas Calvas", link: "https://practicum-content.s3.us-west-1.amazonaws.com/web-code/moved_bald-mountains.jpg" },
-    { name: "Latemar", link: "https://practicum-content.s3.us-west-1.amazonaws.com/web-code/moved_latemar.jpg" },
-    { name: "Parque Nacional de la Vanoise", link: "https://practicum-content.s3.us-west-1.amazonaws.com/web-code/moved_vanoise.jpg" },
-    { name: "Lago di Braies", link: "https://practicum-content.s3.us-west-1.amazonaws.com/web-code/moved_lago.jpg" },
-];
-//  validacion forms 
+import { Api } from "./Api.js";
+import { apiConfig } from "./utils/api-config.js";
+import { PopupWithConfirmation } from "./PopupWithConfirmation.js";
+const api = new Api(apiConfig);
+// validación forms
 const editProfileForm = document.querySelector("#edit-profile-form");
 const newCardFormEl = document.querySelector("#new-card-form");
 const editProfileValidator = new FormValidator(defaultFormConfig, editProfileForm);
 const newCardValidator = new FormValidator(defaultFormConfig, newCardFormEl);
 editProfileValidator.enableValidation();
 newCardValidator.enableValidation();
-// Popup de imagen 
+// Popup de imagen
 const popupWithImage = new PopupWithImage("#image-popup");
 popupWithImage.setEventListeners();
+const deleteCardPopup = new PopupWithConfirmation("#delete-card-popup", async () => {
+    if (!cardToDelete)
+        return;
+    try {
+        await api.deleteCard(cardToDelete.cardId);
+        cardToDelete.card.removeCard();
+    }
+    catch (err) {
+        console.error("Error al eliminar la tarjeta:", err);
+    }
+});
+deleteCardPopup.setEventListeners();
 function handleCardClick(data) {
     popupWithImage.open(data);
 }
-// Sección de tarjetas
+let cardToDelete = null;
+// Sección de tarjetas (arranca vacía, se llena con datos reales del servidor)
 const cardSection = new Section({
-    items: initialCards,
+    items: [],
     renderer: (item) => {
-        const card = new Card(item, "#card-template", () => handleCardClick(item));
+        const card = new Card(item, "#card-template", () => handleCardClick(item), handleLikeClick, handleDeleteClick);
         cardSection.addItem(card.generateCard());
     },
 }, ".cards__list");
-cardSection.renderItems();
-// Información del usuario 
+// Información del usuario
 const userInfo = new UserInfo({
     nameSelector: ".profile__title",
     aboutSelector: ".profile__description",
 });
-// Popup: editar perfil 
-const editProfilePopup = new PopupWithForm("#edit-popup", (inputValues) => {
-    userInfo.setUserInfo({
-        name: inputValues["name"],
-        about: inputValues["description"],
-    });
-    editProfilePopup.close();
+// Cargar datos reales del servidor: usuario + tarjetas, en paralelo
+async function renderInitialData() {
+    try {
+        const [userData, initialCards] = await Promise.all([
+            api.getUserInfo(),
+            api.getInitialCards()
+        ]);
+        userInfo.setUserInfo({ name: userData.name, about: userData.about });
+        initialCards.forEach((cardData) => {
+            const card = new Card(cardData, "#card-template", () => handleCardClick(cardData), handleLikeClick, handleDeleteClick);
+            cardSection.addItem(card.generateCard());
+        });
+    }
+    catch (err) {
+        console.error("Fallo al cargar datos iniciales:", err);
+    }
+}
+renderInitialData();
+// Popup: editar perfil sp9
+const editProfilePopup = new PopupWithForm("#edit-popup", async (inputValues) => {
+    try {
+        const updatedUser = await api.editProfile({
+            name: inputValues["name"],
+            about: inputValues["description"],
+        });
+        userInfo.setUserInfo({ name: updatedUser.name, about: updatedUser.about });
+        editProfilePopup.close();
+    }
+    catch (err) {
+        console.error("Error al actualizar el perfil:", err);
+    }
 });
-editProfilePopup.setEventListeners();
 const profileEditButton = document.querySelector(".profile__edit-button");
 profileEditButton.addEventListener("click", () => {
     const currentUserInfo = userInfo.getUserInfo();
@@ -60,15 +90,20 @@ profileEditButton.addEventListener("click", () => {
     editProfileValidator.resetValidation();
     editProfilePopup.open();
 });
-//  Popup
-const newCardPopup = new PopupWithForm("#new-card-popup", (inputValues) => {
-    const newCardData = {
-        name: inputValues["place-name"],
-        link: inputValues["link"],
-    };
-    const card = new Card(newCardData, "#card-template", () => handleCardClick(newCardData));
-    cardSection.addItem(card.generateCard());
-    newCardPopup.close();
+// Popup: nueva tarjeta - sp9
+const newCardPopup = new PopupWithForm("#new-card-popup", async (inputValues) => {
+    try {
+        const newCardData = await api.addCard({
+            name: inputValues["place-name"],
+            link: inputValues["link"],
+        });
+        const card = new Card(newCardData, "#card-template", () => handleCardClick(newCardData), handleLikeClick, handleDeleteClick);
+        cardSection.addItem(card.generateCard());
+        newCardPopup.close();
+    }
+    catch (err) {
+        console.error("Error al agregar la tarjeta:", err);
+    }
 });
 newCardPopup.setEventListeners();
 const profileAddButton = document.querySelector(".profile__add-button");
@@ -76,3 +111,18 @@ profileAddButton.addEventListener("click", () => {
     newCardValidator.resetValidation();
     newCardPopup.open();
 });
+async function handleLikeClick(cardId, isLiked, card) {
+    try {
+        const updatedCard = isLiked
+            ? await api.unlikeCard(cardId)
+            : await api.likeCard(cardId);
+        card.updateLikeButton(updatedCard.isLiked);
+    }
+    catch (err) {
+        console.error("Error al actualizar el like:", err);
+    }
+}
+function handleDeleteClick(cardId, card) {
+    cardToDelete = { cardId, card };
+    deleteCardPopup.open();
+}
