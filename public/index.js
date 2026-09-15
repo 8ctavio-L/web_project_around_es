@@ -68,6 +68,9 @@ async function renderInitialData() {
 renderInitialData();
 // Popup: editar perfil sp9
 const editProfilePopup = new PopupWithForm("#edit-popup", async (inputValues) => {
+    const submitButton = editProfileForm.querySelector(".popup__button");
+    const originalText = submitButton.textContent;
+    submitButton.textContent = "Guardando...";
     try {
         const updatedUser = await api.editProfile({
             name: inputValues["name"],
@@ -79,7 +82,11 @@ const editProfilePopup = new PopupWithForm("#edit-popup", async (inputValues) =>
     catch (err) {
         console.error("Error al actualizar el perfil:", err);
     }
+    finally {
+        submitButton.textContent = originalText;
+    }
 });
+editProfilePopup.setEventListeners();
 const profileEditButton = document.querySelector(".profile__edit-button");
 profileEditButton.addEventListener("click", () => {
     const currentUserInfo = userInfo.getUserInfo();
@@ -92,6 +99,9 @@ profileEditButton.addEventListener("click", () => {
 });
 // Popup: nueva tarjeta - sp9
 const newCardPopup = new PopupWithForm("#new-card-popup", async (inputValues) => {
+    const submitButton = newCardFormEl.querySelector(".popup__button");
+    const originalText = submitButton.textContent;
+    submitButton.textContent = "Guardando...";
     try {
         const newCardData = await api.addCard({
             name: inputValues["place-name"],
@@ -104,6 +114,9 @@ const newCardPopup = new PopupWithForm("#new-card-popup", async (inputValues) =>
     catch (err) {
         console.error("Error al agregar la tarjeta:", err);
     }
+    finally {
+        submitButton.textContent = originalText;
+    }
 });
 newCardPopup.setEventListeners();
 const profileAddButton = document.querySelector(".profile__add-button");
@@ -111,6 +124,13 @@ profileAddButton.addEventListener("click", () => {
     newCardValidator.resetValidation();
     newCardPopup.open();
 });
+const avatarEditButton = document.querySelector(".profile__avatar-edit-button");
+avatarEditButton.addEventListener("click", () => {
+    editAvatarPopup.open();
+});
+const editAvatarForm = document.querySelector("#edit-avatar-form");
+const editAvatarValidator = new FormValidator(defaultFormConfig, editAvatarForm);
+editAvatarValidator.enableValidation();
 async function handleLikeClick(cardId, isLiked, card) {
     try {
         const updatedCard = isLiked
@@ -126,3 +146,21 @@ function handleDeleteClick(cardId, card) {
     cardToDelete = { cardId, card };
     deleteCardPopup.open();
 }
+const editAvatarPopup = new PopupWithForm("#edit-avatar-popup", async (inputValues) => {
+    const submitButton = editAvatarForm.querySelector(".popup__button");
+    const originalText = submitButton.textContent;
+    submitButton.textContent = "Guardando...";
+    try {
+        const updatedUser = await api.updateAvatar(inputValues["avatar"]);
+        const avatarImage = document.querySelector(".profile__image");
+        avatarImage.src = updatedUser.avatar;
+        editAvatarPopup.close();
+    }
+    catch (err) {
+        console.error("Error al actualizar el avatar:", err);
+    }
+    finally {
+        submitButton.textContent = originalText;
+    }
+});
+editAvatarPopup.setEventListeners();
