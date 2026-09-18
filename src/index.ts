@@ -61,6 +61,7 @@ const cardSection = new Section<CardData>(
 const userInfo = new UserInfo({
     nameSelector: ".profile__title",
     aboutSelector: ".profile__description",
+    avatarSelector: ".profile__image"
 });
 
 // Cargar datos reales del servidor: usuario + tarjetas, en paralelo
@@ -71,7 +72,7 @@ async function renderInitialData(): Promise<void> {
             api.getInitialCards()
         ]);
 
-        userInfo.setUserInfo({ name: userData.name, about: userData.about });
+        userInfo.setUserInfo({ name: userData.name, about: userData.about, avatar: userData.avatar });
 
         initialCards.forEach((cardData) => {
             const card = new Card(cardData, "#card-template", () => handleCardClick(cardData), handleLikeClick, handleDeleteClick)
@@ -95,7 +96,7 @@ const editProfilePopup = new PopupWithForm("#edit-popup", async (inputValues) =>
             name: inputValues["name"],
             about: inputValues["description"],
         });
-        userInfo.setUserInfo({ name: updatedUser.name, about: updatedUser.about });
+        userInfo.setUserInfo({ name: updatedUser.name, about: updatedUser.about, avatar: updatedUser.avatar });
         editProfilePopup.close();
     } catch (err) {
         console.error("Error al actualizar el perfil:", err);

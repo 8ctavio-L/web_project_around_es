@@ -47,6 +47,7 @@ export class Card {
         cardImage.alt = this.data.name;
         cardTitle.textContent = this.data.name;
         this.setEventListeners();
+        this.updateLikeButton(this.data.isLiked);
         return this.element;
 
     }
